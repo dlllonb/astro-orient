@@ -1,0 +1,4 @@
+A file for keeping track of our work and what needs to be done. For code specific things, we should also use Git issues, but for general project stuff, this notepad is good.
+
+TODO: 
+

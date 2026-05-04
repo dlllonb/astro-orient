@@ -1,0 +1,52 @@
+NOTES FOR THE PROJECT
+
+I imagine this a something sort of similar to the Celestron Star (https://www.celestron.com/pages/starsense-technology) but better, not only compatible with Celestron things, and with the more general goal of being a continuous use item, not simply a quick alignment method. However, I'm open to changing / adding to the idea if you want as things evolve during the project, so just let me know at any point if you want to do things a certain way. 
+
+We'll base it around a PCB designed in KICAD, as discussed. We will also want to integrate the PCB with a 3D printed housing though. Additionally, I think its important to have a decent software side / GUI as well. 
+
+HARDWARE
+- PCB designed in KICAD
+- programmed over USB with Arduino IDE / C/C++
+- housing designed in Fusion, 3D printed
+
+Components (that we know for sure)
+- USB hub
+- a PCB microcontroller 
+- onboard on/off button or switch
+- wired on/off switch connection
+- a small camera + lens combination
+- IMU, Gyroscope, Magnetometer
+- GPS module connection
+- temperature, light, pressure sensors 
+- a battery power system?
+- status LEDs, buttons, test points
+
+Structure (my idea so far)
+- we design a box-like thing for the housing
+- exposes the following items
+  * camera lens
+  * on/off switch
+  * light sensor
+  * usb connection
+  * 2nd usb for camera?
+  * 3rd usb for gps?
+- ideally this is easy to open, so we can work on it
+- but once completed, should look like a cohesive device
+- not look like a bare PCB from the outside
+
+I think it would be cool if we built a small USB hub into the design. That way the microcontroller, power, camera, gps, and potentially optional additions would all route through the hub, to a single USB cable, and then into a laptop. 
+
+SOFTWARE
+
+We want all of the data processing to be done in Python in software package, not on the microcontroller. SO the microcontroller is simply in charge of running the sensors and sending all the data up back over USB. We can use USB serial to read the data straight into Python.
+
+Modules (general layout)
+- An I/O layer that does the serial reads, checks data quality, formats data products
+- A processing layer that recieves the formatted data like images, positions, sensor info
+- A display / GUI layer that presents the information to the user 
+
+We should actually write "good" code, by which I mean not that that the lines of code itself need to be ideal (and I imagine AI will be doing most of the literal code anyways) but I mean modularized, and well contained code. So we abstract each of these layers well enough, use individual .py files with specific well defined purposes, and track everything with GitHub
+
+Note that there's a good chance the camera will need to be controlled via its own USB, and not through the microcontroller. We should look into if there are ones that would work that are directly on the PCB, but I'm not sure if that really exists, at least in the quality necessary for platesolving. But this means the software likely has to deal with talking to the PCB and the camera at the same time, seperately. 
+
+
