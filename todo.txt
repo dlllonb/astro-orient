@@ -2,7 +2,7 @@ A file for keeping track of our work and what needs to be done. For code specifi
 
 TODO: use this space for laying out things to be done, in whatever specificity you'd like
 
-1. Get environments set up. Make sure you have access to the GitHub (you do if you're seeing this probably) and push something just to make sure it works. Set up some folders to keep the hardware code apart from the software / GUI side. You can make the file structure however you think is best, but I do think it's pretty important to have something well strcutured, especially in a hardware/software project like this. 
+1. Get environments set up. Make sure you have access to the GitHub (you do if you're seeing this probably) and push something just to make sure it works. Set up some folders to keep the hardware code apart from the software / GUI side. You can make the file structure however you think is best, but I do think it's pretty important to have something well strcutured, especially in a hardware/software project like this. In terms of specific softwares, I'm thinking KICAD, ArduinoIDE, Fusion 360, then whatever coding env you want. 
 
 2. Think about layout and general plan for the components, finish writing up plan.txt, maybe into something a bit more structured and well thought out. I give you leeway to do pretty much whatever you like design wise. For now we just need a good enough idea of where we want to go with the project to start looking into components as described in item 4 below. 
 
