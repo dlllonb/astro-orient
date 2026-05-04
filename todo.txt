@@ -1,4 +1,34 @@
 A file for keeping track of our work and what needs to be done. For code specific things, we should also use Git issues, but for general project stuff, this notepad is good.
 
-TODO: 
+TODO: use this space for laying out things to be done, in whatever specificity you'd like
+
+1. Get environments set up. Make sure you have access to the GitHub (you do if you're seeing this probably) and push something just to make sure it works. Set up some folders to keep the hardware code apart from the software / GUI side. You can make the file structure however you think is best, but I do think it's pretty important to have something well strcutured, especially in a hardware/software project like this. 
+
+2. Think about layout and general plan for the components, finish writing up plan.txt, maybe into something a bit more structured and well thought out. I give you leeway to do pretty much whatever you like design wise. For now we just need a good enough idea of where we want to go with the project to start looking into components as described in item 4 below. 
+
+3. Think about a space in the lab. Likely we'll clear some of Zach's area, since he's finishing up now and we're sort of continuing that project anyways. Also get a key, can you go ask Whitney?
+
+4. Research components. First we need to figure out which microcontroller makes sense. Then we can go from there essentially moving through the things in the list in plan.txt and picking components. Likely this'll take a whole week. In fact, that's probably a good first week goal--pick out all the componenets and order them. Then we can move pretty smoothly into designing the PCB, and we'll have all the parts by the time that is ready. For budget, to some degree we have no constraint. Obviously nothing crazy, but I think PCB parts tend to be pretty cheap. Or maybe you'll already know where to find many of the components. But the one that I built last year that I showed you had a strict budget of $15, and that was extremely annoying. And now since Brad is paying, we don't need to worry. 
+
+ 
+
+TIMELINE: use this space to plan out when the above items in TODO will be done
+
+1, 2. I imagine item 1, and item 2 (which is sort of a fake item because it sort of just says to think about how you want the project to look) can be done soon/now in the lead up to our arbitrary start date of May 18. 
+
+3. Item 3 can also be done before the 18th, it's sort of on me to just make sure its good with Brad, and move Zach's stuff around a bit when he finishes. I'll let you know. Then if you can get the key from Whitney, that'd be good. 
+
+4. This is the first big item, and should be the main task in the week of the 18th. I'm not exactly sure how long this will take, but I can see it being a whole week of just researching different components and figuring out where to get them. Probably you know more about the process of getting stuff than I do, but I guess just ordering stuff from mouser in one big cart is good. There's that function where you "export cart" I think? So we make a cart and then send it to Brad probably. 
+
+
+
+
+
+
+
+
+
+
+
+
 
