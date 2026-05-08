@@ -2,7 +2,7 @@ NOTES FOR THE PROJECT
 
 I imagine this a something sort of similar to the Celestron Star (https://www.celestron.com/pages/starsense-technology) but better, not only compatible with Celestron things, and with the more general goal of being a continuous use item, not simply a quick alignment method. However, I'm open to changing / adding to the idea if you want as things evolve during the project, so just let me know at any point if you want to do things a certain way. 
 
-We'll base it around a PCB designed in KICAD, as discussed. We will also want to integrate the PCB with a 3D printed housing though. Additionally, I think its important to have a decent software side / GUI as well. 
+We'll base it around a PCB designed in KICAD, as discussed. Brad said something about using DKRed to generate the gerber files. We will also want to integrate the PCB with a 3D printed housing though. Additionally, I think its important to have a decent software side / GUI as well. 
 
 HARDWARE
 - PCB designed in KICAD
