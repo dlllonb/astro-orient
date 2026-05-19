@@ -18,8 +18,8 @@ Components (that we know for sure)
 - IMU, Gyroscope, Magnetometer
 - GPS module connection
 - temperature, light, pressure sensors 
-- a battery power system?
 - status LEDs, buttons, test points
+- a battery power system?
 
 Structure (my idea so far)
 - we design a box-like thing for the housing
