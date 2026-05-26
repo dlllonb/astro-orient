@@ -6,7 +6,7 @@ We'll base it around a PCB designed in KICAD, as discussed. Brad said something 
 
 HARDWARE
 - PCB designed in KICAD
-- programmed over USB with Arduino IDE / C/C++
+- programmed over USB with STM Software
 - housing designed in Fusion, 3D printed
 
 Components (that we know for sure)
@@ -15,11 +15,11 @@ Components (that we know for sure)
 - onboard on/off button or switch
 - wired on/off switch connection
 - a small camera + lens combination
-- IMU, Gyroscope, Magnetometer
+- IMU
 - GPS module connection
-- temperature, light, pressure sensors 
+- light sensor
+- pressure/temperature/humidity sensor
 - status LEDs, buttons, test points
-- a battery power system?
 
 Structure (my idea so far)
 - we design a box-like thing for the housing
@@ -27,9 +27,7 @@ Structure (my idea so far)
   * camera lens
   * on/off switch
   * light sensor
-  * usb connection
-  * 2nd usb for camera?
-  * 3rd usb for gps?
+  * usb hub
 - ideally this is easy to open, so we can work on it
 - but once completed, should look like a cohesive device
 - not look like a bare PCB from the outside
@@ -47,6 +45,6 @@ Modules (general layout)
 
 We should actually write "good" code, by which I mean not that that the lines of code itself need to be ideal (and I imagine AI will be doing most of the literal code anyways) but I mean modularized, and well contained code. So we abstract each of these layers well enough, use individual .py files with specific well defined purposes, and track everything with GitHub
 
-Note that there's a good chance the camera will need to be controlled via its own USB, and not through the microcontroller. We should look into if there are ones that would work that are directly on the PCB, but I'm not sure if that really exists, at least in the quality necessary for platesolving. But this means the software likely has to deal with talking to the PCB and the camera at the same time, seperately. 
+Camera, IMU, and GPS will be separately connected to the laptop and will not go through the PCB. 
 
 
