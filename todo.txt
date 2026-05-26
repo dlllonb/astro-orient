@@ -10,6 +10,10 @@ TODO: use this space for laying out things to be done, in whatever specificity y
 
 4. Research components. First we need to figure out which microcontroller makes sense. Then we can go from there essentially moving through the things in the list in plan.txt and picking components. Likely this'll take a whole week. In fact, that's probably a good first week goal--pick out all the componenets and order them. Then we can move pretty smoothly into designing the PCB, and we'll have all the parts by the time that is ready. For budget, to some degree we have no constraint. Obviously nothing crazy, but I think PCB parts tend to be pretty cheap. Or maybe you'll already know where to find many of the components. But the one that I built last year that I showed you had a strict budget of $15, and that was extremely annoying. And now since Brad is paying, we don't need to worry. 
 
+5. Create a KiCad schematic using all the components. This will guide breadboard testing and give an idea how everything should be connected. 
+
+6. Figure out how to program the IMU, GPS, and Camera. These will make up the UI needed for the system. Also should look into how the STM microcontroller is programmed over a USB. 
+
  
 
 TIMELINE: use this space to plan out when the above items in TODO will be done
@@ -19,6 +23,8 @@ TIMELINE: use this space to plan out when the above items in TODO will be done
 3. Item 3 can also be done before the 18th, it's sort of on me to just make sure its good with Brad, and move Zach's stuff around a bit when he finishes. I'll let you know. Then if you can get the key from Whitney, that'd be good. 
 
 4. This is the first big item, and should be the main task in the week of the 18th. I'm not exactly sure how long this will take, but I can see it being a whole week of just researching different components and figuring out where to get them. Probably you know more about the process of getting stuff than I do, but I guess just ordering stuff from mouser in one big cart is good. There's that function where you "export cart" I think? So we make a cart and then send it to Brad probably. 
+
+5. While waiting for the parts to arrive, we should figure out how to use python to operate the GPS, IMU, and camera. The schematic can also be done in this time. 
 
 
 
