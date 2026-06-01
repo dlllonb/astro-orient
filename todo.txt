@@ -5,11 +5,13 @@ TODO: use this space for laying out things to be done, in whatever specificity y
 
 1. Figure out how to program the IMU, GPS, and Camera. These will make up the UI needed for the system. Also should look into how the microcontroller is programmed over a USB. 
 
+2. for the schematic. crystal, test points, check wiring
  
+3. start on pcb layout
+
+4. keep testing sensors, and set up a breadboard version of all of this
 
 TIMELINE: use this space to plan out when the above items in TODO will be done
-
-
 
 1. While waiting for the parts to arrive, we should figure out how to use python to operate the GPS, IMU, and camera. The schematic can also be done in this time. Youre doing both of these alreadyso that's good
 
