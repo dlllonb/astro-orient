@@ -11,6 +11,8 @@ TODO: use this space for laying out things to be done, in whatever specificity y
 
 4. keep testing sensors, and set up a breadboard version of all of this
 
+5. work on abstract and layout of paper as time allows
+
 TIMELINE: use this space to plan out when the above items in TODO will be done
 
 1. While waiting for the parts to arrive, we should figure out how to use python to operate the GPS, IMU, and camera. The schematic can also be done in this time. Youre doing both of these alreadyso that's good
