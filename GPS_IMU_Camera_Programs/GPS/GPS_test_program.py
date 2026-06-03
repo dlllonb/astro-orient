@@ -1,35 +1,38 @@
-import serial
-import pynmea2
-# ser = serial.Serial("COM4", baudrate=9600, timeout=3000)
-#
-# datalist = []
-# for i in range(30):
-#     data = ser.readline()
-#     if len(data) > 0:
-#         datalist.append(data.decode("utf-8"))
-# ser.close()
-#
-# logFile = open("GPS_test.txt","w")
-# for data in datalist:
-#     # Convert tuple to string, strips parenthesis, and adds new line before writing to file.
-#     logFile.write(str(data).strip('\n'))
-#
-# logFile.close()
+# GPS_test_program.py
 
-file = open('GPS_test.txt', encoding='utf-8')
+from GPSConnector import GPSReader
 
-for line in file.readlines():
+
+def main():
+    gps = GPSReader(port="COM4", baudrate=9600, timeout=1.0)
+    gps.connect()
+
     try:
-        msg = pynmea2.parse(line)
-        #print(type(msg))
-        if isinstance(msg, pynmea2.types.talker.GGA):
-            print(msg.timestamp)
-            print(msg.lat, msg.lat_dir)
-            print(msg.lon, msg.lon_dir)
-            print()
+        while True:
+            data = gps.update_once()
 
-        #print(repr(msg))
+            if data.has_fix:
+                print(
+                    f"Lat: {data.latitude:.6f}, "
+                    f"Lon: {data.longitude:.6f}, "
+                    f"Alt: {data.altitude} m, "
+                    f"Sats: {data.satellites_in_view}, "
+                    f"HDOP: {data.hdop}, "
+                    f"speed: {data.speed_over_ground_kmph}"
+                )
+            else:
+                print(
+                    f"Waiting for GPS fix... "
+                    f"Last sentence: {data.last_sentence_type}, "
+                    f"Parse errors: {data.parse_errors}"
+                )
 
-    except pynmea2.ParseError as e:
-        print('Parse error: {}'.format(e))
-        continue
+    except KeyboardInterrupt:
+        print("Stopping GPS reader.")
+
+    finally:
+        gps.close()
+
+
+if __name__ == "__main__":
+    main()
