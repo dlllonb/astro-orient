@@ -3,19 +3,21 @@ A file for keeping track of our work and what needs to be done. For code specifi
 TODO: use this space for laying out things to be done, in whatever specificity you'd like
 
 
-1. Figure out how to program the IMU, GPS, and Camera. These will make up the UI needed for the system. Also should look into how the microcontroller is programmed over a USB. 
+1. Layout PCB components on KiCad and confirm their wiring 
 
-2. for the schematic, check how the test points will look on the board and confirm wiring
+2. check how the test points will look on the board
  
-3. keep testing sensors, and set up a breadboard version of all of this
+3. Work on the GUI - need to work on a dynamic 3D representation of the IMU
 
 4. work on abstract and backround of paper as time allows
 
-5. Test the camera at nighttime, see what can be done in terms of platesolving and how much it can see
+5. Test the camera at nighttime, see if other models would work better due to automatic exposure settings
 
 TIMELINE: use this space to plan out when the above items in TODO will be done
 
-1. While waiting for the parts to arrive, we should figure out how to use python to operate the GPS, IMU, and camera. The schematic can also be done in this time. Youre doing both of these alreadyso that's good
+1. First confirm the final schematic and the brief layout on KiCad
+
+2. Continue working on the GUI
 
 
 
