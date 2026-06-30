@@ -1,7 +1,7 @@
 
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
+
 
 import serial.tools.list_ports
 from PySide6.QtCore import QThread, QTimer, Qt, Signal, Slot
@@ -22,11 +22,6 @@ from PySide6.QtWidgets import (
 from GPS.gps_tab import GPSDetailsTab
 from IMU.imu_home_component import LiveImuOrientationWidget
 from IMU.imu_tab import IMUDetailsTab
-
-# PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# GPS_MODULE_DIR = PROJECT_ROOT / "GPS_IMU_Camera_Programs" / "GPS"
-# if GPS_MODULE_DIR.exists():
-#     sys.path.insert(0, str(GPS_MODULE_DIR))
 
 try:
     from GUI.GPS.GPSConnector import GPSReader

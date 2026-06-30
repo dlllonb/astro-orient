@@ -2,7 +2,6 @@ import math
 import sys
 import time
 from dataclasses import dataclass
-from pathlib import Path
 from threading import Lock
 
 import numpy as np
@@ -19,9 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 
-# SCRIPT_DIR = Path(__file__).resolve().parent
-# if str(SCRIPT_DIR) not in sys.path:
-#     sys.path.insert(0, str(SCRIPT_DIR))
 
 
 def identity_matrix():

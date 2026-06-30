@@ -1,13 +1,7 @@
-import sys
-from pathlib import Path
 
 from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
-# PROJECT_ROOT = Path(__file__).resolve().parent.parent
-# IMU_DRIVER_DIR = PROJECT_ROOT / "GPS_IMU_Camera_Programs" / "IMU"
-# if IMU_DRIVER_DIR.exists():
-#     sys.path.insert(0, str(IMU_DRIVER_DIR))
 
 from .imu_orientation_component import Orientation3DView, ThreeSpaceQuaternionReader
 
