@@ -142,7 +142,7 @@
         "min_text_thickness": 0.08,
         "min_through_hole_diameter": 0.2,
         "min_track_width": 0.127,
-        "min_via_annular_width": 0.1,
+        "min_via_annular_width": 0.127,
         "min_via_diameter": 0.5,
         "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
@@ -517,7 +517,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "C:/Users/gpp20/OneDrive/Desktop/Desktop/college/astro-orient/astro_orient_kicad/Gerbers/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
