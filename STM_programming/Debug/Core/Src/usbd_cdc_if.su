@@ -1,0 +1,7 @@
+../Core/Src/usbd_cdc_if.c:38:15:CDC_Itf_Init	8	static
+../Core/Src/usbd_cdc_if.c:47:15:CDC_Itf_DeInit	8	static
+../Core/Src/usbd_cdc_if.c:52:15:CDC_Itf_Control	16	static
+../Core/Src/usbd_cdc_if.c:85:15:CDC_Itf_Receive	24	static
+../Core/Src/usbd_cdc_if.c:104:9:AstroCDC_ReadByte	24	static,ignoring_inline_asm
+../Core/Src/usbd_cdc_if.c:125:9:AstroCDC_WriteBytes	24	static
+../Core/Src/usbd_cdc_if.c:156:9:AstroCDC_Write	24	static

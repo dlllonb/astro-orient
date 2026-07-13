@@ -1,0 +1,7 @@
+../Core/Src/bme280_app.c:19:15:bme_i2c_read	2
+../Core/Src/bme280_app.c:34:15:bme_i2c_write	2
+../Core/Src/bme280_app.c:49:13:bme_delay_us	1
+../Core/Src/bme280_app.c:55:16:bme_bus_init	3
+../Core/Src/bme280_app.c:92:9:BME280_App_Init	7
+../Core/Src/bme280_app.c:144:9:BME280_App_Read	4
+../Core/Src/bme280_app.c:164:9:BME280_App_Address	2

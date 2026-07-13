@@ -1,0 +1,7 @@
+../Core/Src/bme280_app.c:19:15:bme_i2c_read	64	static
+../Core/Src/bme280_app.c:34:15:bme_i2c_write	64	static
+../Core/Src/bme280_app.c:49:13:bme_delay_us	16	static
+../Core/Src/bme280_app.c:55:16:bme_bus_init	48	static
+../Core/Src/bme280_app.c:92:9:BME280_App_Init	40	static
+../Core/Src/bme280_app.c:144:9:BME280_App_Read	32	static
+../Core/Src/bme280_app.c:164:9:BME280_App_Address	8	static
