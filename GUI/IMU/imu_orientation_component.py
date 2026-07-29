@@ -101,8 +101,8 @@ class ThreeSpaceQuaternionReader(QThread):
     def run(self):
         self._running = True
         try:
-            import USB_ExampleClass
-            from ThreeSpaceAPI import ThreeSpaceSensor
+            from . import USB_ExampleClass
+            from .ThreeSpaceAPI import ThreeSpaceSensor
 
             communication = USB_ExampleClass.UsbCom(portName=self.port)
             self._sensor = ThreeSpaceSensor(communication)

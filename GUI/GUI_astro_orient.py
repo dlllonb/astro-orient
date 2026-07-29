@@ -1,7 +1,6 @@
-
 import sys
 from datetime import datetime, timezone
-
+#from pathlib import Path
 
 import serial.tools.list_ports
 from PySide6.QtCore import QThread, QTimer, Qt, Signal, Slot
@@ -22,9 +21,20 @@ from PySide6.QtWidgets import (
 from GPS.gps_tab import GPSDetailsTab
 from IMU.imu_home_component import LiveImuOrientationWidget
 from IMU.imu_tab import IMUDetailsTab
+from Camera.camera_home_component import LiveCameraFeedWidget
+from Camera.camera_tab import CameraDetailsTab
+
+
+from PCB.pcb_component import PCBWorker
+from PCB.pcb_tab import PCBDetailsTab
+
+# PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# GPS_MODULE_DIR = PROJECT_ROOT / "GPS_IMU_Camera_Programs" / "GPS"
+# if GPS_MODULE_DIR.exists():
+#     sys.path.insert(0, str(GPS_MODULE_DIR))
 
 try:
-    from GUI.GPS.GPSConnector import GPSReader
+    from GPS.GPSConnector import GPSReader
 except ImportError:
     GPSReader = None
 
@@ -245,6 +255,11 @@ class AstronomyPointingGui(QMainWindow):
         tabs.tabBar().setUsesScrollButtons(False)
         self.gps_details_tab = GPSDetailsTab()
         self.imu_details_tab = IMUDetailsTab()
+        self.camera_details_tab = CameraDetailsTab()
+        self.pcb_details_tab = PCBDetailsTab()
+        self.gps_led_connected = False
+        self.gps_led_locked = False
+        self.imu_led_connected = False
         self.gps_details_tab.baud_rate_change_requested.connect(self.change_gps_baud_rate)
         self.gps_details_tab.disconnect_requested.connect(self.disconnect_gps)
         self.gps_details_tab.reconnect_requested.connect(self.reconnect_gps)
@@ -255,17 +270,27 @@ class AstronomyPointingGui(QMainWindow):
         self.imu_details_tab.baud_rate_change_requested.connect(self.change_imu_baud_rate)
         self.imu_details_tab.component_enable_requested.connect(self.set_imu_component_enabled)
         self.imu_details_tab.update_connection_details("auto-discover", "driver default")
+        self.camera_details_tab.disconnect_requested.connect(self.disconnect_camera)
+        self.camera_details_tab.reconnect_requested.connect(self.reconnect_camera)
+        self.camera_details_tab.format_change_requested.connect(self.change_camera_format)
+        self.camera_details_tab.exposure_change_requested.connect(self.change_camera_exposure)
+        self.camera_details_tab.gain_change_requested.connect(self.change_camera_gain)
+        self.camera_details_tab.brightness_change_requested.connect(self.change_camera_brightness)
+        self.pcb_details_tab.disconnect_requested.connect(self.disconnect_pcb)
+        self.pcb_details_tab.reconnect_requested.connect(self.reconnect_pcb)
+        self.pcb_details_tab.baud_rate_change_requested.connect(self.change_pcb_baud_rate)
         tabs.addTab(self.build_home_tab(), "Main")
         tabs.addTab(self.gps_details_tab, "GPS")
         tabs.addTab(self.imu_details_tab, "IMU")
-        tabs.addTab(self.placeholder_tab("Camera"), "Camera")
-        tabs.addTab(self.placeholder_tab("PCB"), "PCB")
+        tabs.addTab(self.camera_details_tab, "Camera")
+        tabs.addTab(self.pcb_details_tab, "PCB")
         tabs.addTab(self.placeholder_tab("Log"), "Log")
 
         shell_layout.addWidget(tabs)
         self.setCentralWidget(shell)
         self.apply_styles()
         self.start_gps_worker()
+        self.start_pcb_worker()
 
     def build_home_tab(self) -> QWidget:
         page = QWidget()
@@ -294,26 +319,87 @@ class AstronomyPointingGui(QMainWindow):
 
         return page
 
-    @staticmethod
-    def sensor_summary_panel() -> Panel:
+    def sensor_summary_panel(self) -> Panel:
         panel = Panel("Environment / PCB")
 
         values = QGridLayout()
         values.setHorizontalSpacing(10)
         values.setVerticalSpacing(5)
-        values.addWidget(ValueLabel("Temp", "--", "C"), 0, 0)
-        values.addWidget(ValueLabel("Pressure", "--", "hPa"), 1, 0)
-        values.addWidget(ValueLabel("Humidity", "--", "%"), 2, 0)
-        values.addWidget(ValueLabel("Light", "--", "lux"), 3, 0)
+        self.pcb_temp_label = ValueLabel("Temp", "--", "C")
+        self.pcb_pressure_label = ValueLabel("Pressure", "--", "hPa")
+        self.pcb_humidity_label = ValueLabel("Humidity", "--", "%")
+        self.pcb_light_label = ValueLabel("Ambient light", "--", "%")
+        values.addWidget(self.pcb_temp_label, 0, 0)
+        values.addWidget(self.pcb_pressure_label, 1, 0)
+        values.addWidget(self.pcb_humidity_label, 2, 0)
+        values.addWidget(self.pcb_light_label, 3, 0)
 
-        status = QLabel("Status: waiting for PCB")
-        status.setObjectName("statusText")
+        self.pcb_status_label = QLabel("Status: waiting for PCB")
+        self.pcb_status_label.setObjectName("statusText")
 
         panel.layout.addLayout(values)
         panel.layout.addStretch(1)
-        panel.layout.addWidget(status)
+        panel.layout.addWidget(self.pcb_status_label)
         panel.setMinimumHeight(250)
         return panel
+
+    def start_pcb_worker(self) -> None:
+        self.pcb_worker = PCBWorker(baudrate=getattr(self, "pcb_baudrate", 115200))
+        self.pcb_worker.data_ready.connect(self.update_pcb_display)
+        self.pcb_worker.status_ready.connect(self.update_pcb_status)
+        self.pcb_worker.connection_ready.connect(self.update_pcb_connection_details)
+        self.pcb_worker.start()
+
+    def stop_pcb_worker(self) -> None:
+        if hasattr(self, "pcb_worker") and self.pcb_worker.isRunning():
+            self.pcb_worker.stop()
+
+    @Slot()
+    def disconnect_pcb(self) -> None:
+        self.stop_pcb_worker()
+        self.update_pcb_status("disconnected")
+        self.update_pcb_connection_details(
+            "--",
+            getattr(self, "pcb_baudrate", 115200),
+            "disconnected",
+        )
+
+    @Slot()
+    def reconnect_pcb(self) -> None:
+        self.stop_pcb_worker()
+        self.update_pcb_status("reconnecting")
+        self.start_pcb_worker()
+
+    @Slot(int)
+    def change_pcb_baud_rate(self, baudrate: int) -> None:
+        self.pcb_baudrate = baudrate
+        self.stop_pcb_worker()
+        self.update_pcb_status("changing baud rate")
+        self.start_pcb_worker()
+
+    @Slot(dict)
+    def update_pcb_display(self, data: dict) -> None:
+        if "temperature" in data:
+            self.pcb_temp_label.set_value(data["temperature"])
+        if "pressure" in data:
+            self.pcb_pressure_label.set_value(data["pressure"])
+        if "humidity" in data:
+            self.pcb_humidity_label.set_value(data["humidity"])
+        if "ambient_light" in data:
+            self.pcb_light_label.set_value(data["ambient_light"])
+        self.pcb_details_tab.update_data(data)
+
+    @Slot(str)
+    def update_pcb_status(self, status: str) -> None:
+        self.pcb_status_label.setText(f"Status: {status}")
+        self.pcb_details_tab.update_status(status)
+
+    @Slot(str, int, str)
+    def update_pcb_connection_details(self, com_port: str, baudrate: int, quality: str) -> None:
+        self.pcb_details_tab.update_connection_details(com_port, baudrate, quality)
+        if quality == "connected" and hasattr(self, "pcb_worker"):
+            self.pcb_worker.set_gps_led(self.gps_led_connected, self.gps_led_locked)
+            self.pcb_worker.set_imu_led(self.imu_led_connected)
 
     def gps_panel(self) -> Panel:
         panel = Panel()
@@ -414,33 +500,42 @@ class AstronomyPointingGui(QMainWindow):
         self.gps_age_label.set_value(data["age"])
         self.gps_utc_label.setText(f"UTC time:  {data['datestamp']} {data['utc']}")
         self.gps_details_tab.update_data(data)
+        self.set_gps_led(True, data.get("status") == "fix")
 
     @Slot(str)
     def update_gps_status(self, status: str) -> None:
         self.gps_status_label.set_value(status)
         self.gps_details_tab.update_status(status)
+        lower_status = status.lower()
+        self.set_gps_led(
+            lower_status.startswith("connected") or lower_status == "fix",
+            "fix" in lower_status,
+            )
 
     @Slot(str, int, str)
     def update_gps_connection_details(self, com_port: str, baudrate: int, quality: str) -> None:
         self.gps_details_tab.update_connection_details(com_port, baudrate, quality)
 
     def closeEvent(self, event) -> None:
+        self.stop_pcb_worker()
         self.stop_gps_worker()
         if hasattr(self, "imu_orientation_widget"):
             self.imu_orientation_widget.shutdown()
+        if hasattr(self, "camera_feed_widget"):
+            self.camera_feed_widget.shutdown()
         super().closeEvent(event)
 
-    @staticmethod
-    def camera_panel() -> Panel:
+    def camera_panel(self) -> Panel:
         panel = Panel("Camera")
 
         feed = AspectRatioBox("cameraFeed")
         feed_layout = QVBoxLayout(feed.box)
         feed_layout.setContentsMargins(0, 0, 0, 0)
-        feed_label = QLabel("Camera live feed")
-        feed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        feed_label.setObjectName("cameraFeedText")
-        feed_layout.addWidget(feed_label)
+        self.camera_feed_widget = LiveCameraFeedWidget(keyword="Arducam")
+        self.camera_feed_widget.frame_ready.connect(self.camera_details_tab.update_frame)
+        self.camera_feed_widget.status_ready.connect(self.camera_details_tab.update_status)
+        self.camera_feed_widget.settings_ready.connect(self.camera_details_tab.update_settings)
+        feed_layout.addWidget(self.camera_feed_widget)
         panel.layout.addWidget(feed, stretch=1)
 
         coordinate_strip = QFrame()
@@ -456,6 +551,8 @@ class AstronomyPointingGui(QMainWindow):
         coordinates.addWidget(ValueLabel("Az", "--", "deg"), 1, 1)
         coordinate_strip.setLayout(coordinates)
         panel.layout.addWidget(coordinate_strip)
+
+        self.camera_feed_widget.start()
 
         return panel
 
@@ -507,6 +604,7 @@ class AstronomyPointingGui(QMainWindow):
         self.imu_roll_label.set_value(f"{roll:.2f}")
         self.imu_pitch_label.set_value(f"{pitch:.2f}")
         self.imu_yaw_label.set_value(f"{yaw:.2f}")
+        self.set_imu_led(True)
 
     @Slot()
     def apply_imu_tare(self) -> None:
@@ -522,6 +620,7 @@ class AstronomyPointingGui(QMainWindow):
     def disconnect_imu(self) -> None:
         self.imu_orientation_widget.stop()
         self.imu_details_tab.update_status("disconnected")
+        self.set_imu_led(False)
 
     @Slot()
     def reconnect_imu(self) -> None:
@@ -536,6 +635,44 @@ class AstronomyPointingGui(QMainWindow):
     @Slot(str, bool)
     def set_imu_component_enabled(self, component: str, enabled: bool) -> None:
         self.imu_orientation_widget.set_component_enabled(component, enabled)
+
+    def set_gps_led(self, connected: bool, locked: bool) -> None:
+        self.gps_led_connected = connected
+        self.gps_led_locked = locked
+        if hasattr(self, "pcb_worker") and self.pcb_worker.isRunning():
+            self.pcb_worker.set_gps_led(connected, locked)
+
+    def set_imu_led(self, connected: bool) -> None:
+        self.imu_led_connected = connected
+        if hasattr(self, "pcb_worker") and self.pcb_worker.isRunning():
+            self.pcb_worker.set_imu_led(connected)
+
+    @Slot()
+    def disconnect_camera(self) -> None:
+        self.camera_feed_widget.stop()
+        self.camera_details_tab.update_status("disconnected")
+
+    @Slot()
+    def reconnect_camera(self) -> None:
+        self.camera_feed_widget.reconnect()
+        self.camera_details_tab.update_status("reconnecting")
+
+    @Slot(int, int, int)
+    def change_camera_format(self, width: int, height: int, fps: int) -> None:
+        self.camera_feed_widget.set_format(width, height, fps)
+        self.camera_details_tab.update_status("applying format")
+
+    @Slot(int, bool)
+    def change_camera_exposure(self, exposure: int, auto_exposure: bool) -> None:
+        self.camera_feed_widget.set_exposure(exposure, auto_exposure)
+
+    @Slot(int)
+    def change_camera_gain(self, gain: int) -> None:
+        self.camera_feed_widget.set_gain(gain)
+
+    @Slot(int)
+    def change_camera_brightness(self, brightness: int) -> None:
+        self.camera_feed_widget.set_brightness(brightness)
 
     @staticmethod
     def placeholder_tab(name: str) -> QWidget:
