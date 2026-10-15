@@ -1,4 +1,6 @@
 import sys
+import time
+from dataclasses import replace
 from datetime import datetime, timezone
 #from pathlib import Path
 
@@ -27,6 +29,8 @@ from Camera.camera_tab import CameraDetailsTab
 
 from PCB.pcb_component import PCBWorker
 from PCB.pcb_tab import PCBDetailsTab
+from Log.logging_tab import LoggingTab
+from Log.telemetry import LogController, TelemetryBridge
 
 # PROJECT_ROOT = Path(__file__).resolve().parent.parent
 # GPS_MODULE_DIR = PROJECT_ROOT / "GPS_IMU_Camera_Programs" / "GPS"
@@ -41,6 +45,7 @@ except ImportError:
 
 class GPSWorker(QThread):
     data_ready = Signal(dict)
+    telemetry_ready = Signal(object)
     status_ready = Signal(str)
     connection_ready = Signal(str, int, str)
 
@@ -72,8 +77,15 @@ class GPSWorker(QThread):
             self.status_ready.emit(f"Connected on {gps_port}")
             self.connection_ready.emit(gps_port, self.baudrate, "connected")
 
+            last_received = None
             while self._running:
                 data = self._gps.update_once()
+                if data.last_update is not None and data.last_update != last_received:
+                    last_received = data.last_update
+                    self.telemetry_ready.emit({
+                        "data": replace(data), "monotonic": time.monotonic(),
+                        "utc": datetime.now(timezone.utc),
+                    })
                 self.data_ready.emit(self._to_display_dict(data))
         except Exception as error:
             self.status_ready.emit(f"GPS error: {error}")
@@ -81,8 +93,7 @@ class GPSWorker(QThread):
         finally:
             if self._gps is not None:
                 self._gps.close()
-            if not self._running:
-                self.connection_ready.emit("--", self.baudrate, "disconnected")
+            self.connection_ready.emit("--", self.baudrate, "disconnected")
 
     def _find_gps_port(self) -> str | None:
         for port in serial.tools.list_ports.comports():
@@ -238,6 +249,11 @@ class AstronomyPointingGui(QMainWindow):
         super().__init__()
         self.setWindowTitle("Astro-orient")
         self.resize(1280, 820)
+        self.telemetry = TelemetryBridge(self)
+        self.log_controller = LogController(self.telemetry.store, self)
+        self.logging_tab = LoggingTab(self.log_controller)
+        self._close_after_recording = False
+        self.log_controller.finished.connect(self._recording_finished)
 
         shell = QWidget()
         shell_layout = QVBoxLayout(shell)
@@ -284,7 +300,7 @@ class AstronomyPointingGui(QMainWindow):
         tabs.addTab(self.imu_details_tab, "IMU")
         tabs.addTab(self.camera_details_tab, "Camera")
         tabs.addTab(self.pcb_details_tab, "PCB")
-        tabs.addTab(self.placeholder_tab("Log"), "Log")
+        tabs.addTab(self.logging_tab, "Log")
 
         shell_layout.addWidget(tabs)
         self.setCentralWidget(shell)
@@ -345,6 +361,8 @@ class AstronomyPointingGui(QMainWindow):
 
     def start_pcb_worker(self) -> None:
         self.pcb_worker = PCBWorker(baudrate=getattr(self, "pcb_baudrate", 115200))
+        self.pcb_worker.telemetry_ready.connect(self.telemetry.pcb_sample, Qt.ConnectionType.DirectConnection)
+        self.pcb_worker.connection_ready.connect(self.telemetry.pcb_connection, Qt.ConnectionType.DirectConnection)
         self.pcb_worker.data_ready.connect(self.update_pcb_display)
         self.pcb_worker.status_ready.connect(self.update_pcb_status)
         self.pcb_worker.connection_ready.connect(self.update_pcb_connection_details)
@@ -462,6 +480,8 @@ class AstronomyPointingGui(QMainWindow):
 
     def start_gps_worker(self) -> None:
         self.gps_worker = GPSWorker(baudrate=getattr(self, "gps_baudrate", 9600))
+        self.gps_worker.telemetry_ready.connect(self.telemetry.gps_sample, Qt.ConnectionType.DirectConnection)
+        self.gps_worker.connection_ready.connect(self.telemetry.gps_connection, Qt.ConnectionType.DirectConnection)
         self.gps_worker.data_ready.connect(self.update_gps_display)
         self.gps_worker.status_ready.connect(self.update_gps_status)
         self.gps_worker.connection_ready.connect(self.update_gps_connection_details)
@@ -517,6 +537,11 @@ class AstronomyPointingGui(QMainWindow):
         self.gps_details_tab.update_connection_details(com_port, baudrate, quality)
 
     def closeEvent(self, event) -> None:
+        if self.log_controller.running:
+            self._close_after_recording = True
+            self.log_controller.stop()
+            event.ignore()
+            return
         self.stop_pcb_worker()
         self.stop_gps_worker()
         if hasattr(self, "imu_orientation_widget"):
@@ -525,6 +550,11 @@ class AstronomyPointingGui(QMainWindow):
             self.camera_feed_widget.shutdown()
         super().closeEvent(event)
 
+    @Slot()
+    def _recording_finished(self):
+        if self._close_after_recording:
+            QTimer.singleShot(0, self.close)
+
     def camera_panel(self) -> Panel:
         panel = Panel("Camera")
 
@@ -532,6 +562,8 @@ class AstronomyPointingGui(QMainWindow):
         feed_layout = QVBoxLayout(feed.box)
         feed_layout.setContentsMargins(0, 0, 0, 0)
         self.camera_feed_widget = LiveCameraFeedWidget(keyword="Arducam")
+        self.camera_feed_widget.sample_ready.connect(self.telemetry.camera_sample, Qt.ConnectionType.DirectConnection)
+        self.camera_feed_widget.settings_ready.connect(self.telemetry.camera_settings, Qt.ConnectionType.DirectConnection)
         self.camera_feed_widget.frame_ready.connect(self.camera_details_tab.update_frame)
         self.camera_feed_widget.status_ready.connect(self.camera_details_tab.update_status)
         self.camera_feed_widget.settings_ready.connect(self.camera_details_tab.update_settings)
@@ -563,6 +595,8 @@ class AstronomyPointingGui(QMainWindow):
         model_layout = QVBoxLayout(model.box)
         model_layout.setContentsMargins(0, 0, 0, 0)
         self.imu_orientation_widget = LiveImuOrientationWidget()
+        self.imu_orientation_widget.reader.sample_ready.connect(self.telemetry.imu_sample, Qt.ConnectionType.DirectConnection)
+        self.imu_orientation_widget.reader.status_changed.connect(self.telemetry.imu_status, Qt.ConnectionType.DirectConnection)
         self.imu_orientation_widget.angles_changed.connect(self.update_imu_angles)
         self.imu_orientation_widget.angles_changed.connect(self.imu_details_tab.update_angles)
         self.imu_orientation_widget.sample_ready.connect(self.imu_details_tab.update_orientation_sample)

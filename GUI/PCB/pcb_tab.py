@@ -117,7 +117,6 @@ class PCBDetailsTab(QWidget):
             self._add_row("connection_quality", "Connection quality", "not connected", "", 150)
         )
         panel.layout.addWidget(self._add_row("baudrate", "Baud rate", "115200", "", 150))
-        panel.layout.addWidget(self._add_row("message_type", "Last message type", "--", "", 150))
 
         controls = QHBoxLayout()
         controls.setContentsMargins(0, 12, 0, 0)

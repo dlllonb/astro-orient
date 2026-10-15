@@ -1,5 +1,6 @@
 import json
 import time
+from datetime import datetime, timezone
 from threading import Lock
 from typing import Any
 
@@ -95,6 +96,7 @@ class AstroOrientSensor:
 
 class PCBWorker(QThread):
     data_ready = Signal(dict)
+    telemetry_ready = Signal(object)
     status_ready = Signal(str)
     connection_ready = Signal(str, int, str)
 
@@ -140,6 +142,11 @@ class PCBWorker(QThread):
                 self._apply_pending_commands()
                 message = self._sensor.read_message()
                 if message is not None:
+                    self.telemetry_ready.emit({
+                        "message": message,
+                        "monotonic": time.monotonic(),
+                        "utc": datetime.now(timezone.utc),
+                    })
                     self.data_ready.emit(self._to_display_dict(message))
         except Exception as exc:
             self.status_ready.emit(f"PCB error: {exc}")
@@ -181,6 +188,7 @@ class PCBWorker(QThread):
         )
         raw_light_1 = self._first(
             message,
+            "light_1_raw_avg",
             "raw_light_1_avg",
             "raw_light1_avg",
             "light1_raw_avg",
@@ -207,6 +215,7 @@ class PCBWorker(QThread):
         )
         raw_light_2 = self._first(
             message,
+            "light_2_raw_avg",
             "raw_light_2_avg",
             "raw_light2_avg",
             "light2_raw_avg",
@@ -233,6 +242,7 @@ class PCBWorker(QThread):
         )
         raw_light_avg = self._first(
             message,
+            "ambient_light_raw_avg",
             "raw_light_avg",
             "raw_light_average",
             "light_raw_avg",

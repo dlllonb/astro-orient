@@ -62,6 +62,7 @@ class GPSData:
     magnetic_track: Decimal | None = None
     magnetic_track_sym: str | None = None
     speed_over_ground_kmph: float | None = None
+    course_over_ground: float | None = None
 
     #rmc
     datestamp: str | None = None
@@ -169,6 +170,7 @@ class GPSReader:
             self.data.age_of_gps_data = msg.age_gps_data
             self.data.gps_quality = self._safe_int(msg.gps_qual)
             self.data.num_sat_used = self._safe_int(msg.num_sats)
+            self.data.hdop = self._safe_float(msg.horizontal_dil)
             self.data.geo_separation = self._safe_float(msg.geo_sep)
             self.data.geo_separation_unit = msg.geo_sep_units
 
@@ -176,6 +178,8 @@ class GPSReader:
 
         elif isinstance(msg, pynmea2.types.talker.RMC):
             self.data.datestamp = msg.datestamp
+            self.data.timestamp = msg.timestamp
+            self.data.course_over_ground = self._safe_float(msg.true_course)
             self.data.status= msg.status
             self.data.mode_indicator = msg.mode_indicator
 
@@ -192,6 +196,7 @@ class GPSReader:
             self.data.magnetic_track = self._safe_float(msg.mag_track)
             self.data.magnetic_track_sym = msg.mag_track_sym
             self.data.speed_over_ground_kmph = self._safe_float(msg.spd_over_grnd_kmph)
+            self.data.course_over_ground = self._safe_float(msg.true_track)
 
         elif isinstance(msg, pynmea2.types.talker.GSV):
             self.data.satellites_in_view= self._safe_int(msg.num_sv_in_view)

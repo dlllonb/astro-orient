@@ -1,5 +1,8 @@
 import time
+from collections import deque
+from datetime import datetime, timezone
 from threading import Lock
+from uuid import uuid4
 
 from PySide6.QtCore import QThread, Qt, Signal, Slot
 from PySide6.QtGui import QImage, QPixmap
@@ -8,6 +11,7 @@ from PySide6.QtWidgets import QLabel, QVBoxLayout, QWidget
 
 class CameraWorker(QThread):
     frame_ready = Signal(QImage)
+    sample_ready = Signal(object)
     status_ready = Signal(str)
     settings_ready = Signal(dict)
 
@@ -80,10 +84,15 @@ class CameraWorker(QThread):
             self.status_ready.emit(f"Camera connected: {device_name}")
             self._emit_settings(cv2, cap, camera_index, device_name, "connected")
             frame_delay = 1.0 / max(1, self.fps)
+            session_id = uuid4().hex
+            frame_number = 0
+            frame_times = deque(maxlen=60)
 
             while self._running:
                 self._apply_pending_controls(cv2, cap, camera_index, device_name)
                 ret, frame = cap.read()
+                received_mono = time.monotonic()
+                received_utc = datetime.now(timezone.utc)
                 if not ret:
                     self.status_ready.emit("Failed to grab frame")
                     time.sleep(0.05)
@@ -99,6 +108,24 @@ class CameraWorker(QThread):
                     bytes_per_line,
                     QImage.Format.Format_RGB888,
                 ).copy()
+                frame_number += 1
+                frame_times.append(received_mono)
+                measured_fps = (
+                    (len(frame_times) - 1) / (frame_times[-1] - frame_times[0])
+                    if len(frame_times) > 1 and frame_times[-1] > frame_times[0] else None
+                )
+                self.sample_ready.emit({
+                    "identity": f"{session_id}:{frame_number}", "number": frame_number,
+                    "image": image, "monotonic": received_mono, "utc": received_utc,
+                    "settings": {
+                        "device_name": device_name, "device_index": camera_index,
+                        "resolution": f"{width} x {height}", "requested_fps": self.fps,
+                        "driver_fps": cap.get(cv2.CAP_PROP_FPS), "measured_fps": measured_fps,
+                        "exposure": cap.get(cv2.CAP_PROP_EXPOSURE), "gain": cap.get(cv2.CAP_PROP_GAIN),
+                        "brightness": cap.get(cv2.CAP_PROP_BRIGHTNESS),
+                        "auto_exposure": "auto" if self.auto_exposure else "manual",
+                    },
+                })
                 self.frame_ready.emit(image)
                 time.sleep(frame_delay)
         except Exception as exc:
@@ -173,6 +200,7 @@ class CameraWorker(QThread):
 
 class LiveCameraFeedWidget(QWidget):
     frame_ready = Signal(QImage)
+    sample_ready = Signal(object)
     status_ready = Signal(str)
     settings_ready = Signal(dict)
 
@@ -258,9 +286,10 @@ class LiveCameraFeedWidget(QWidget):
         )
         self.worker.frame_ready.connect(self.update_frame)
         self.worker.frame_ready.connect(self.frame_ready)
+        self.worker.sample_ready.connect(self.sample_ready, Qt.ConnectionType.DirectConnection)
         self.worker.status_ready.connect(self.set_status_text)
         self.worker.status_ready.connect(self.status_ready)
-        self.worker.settings_ready.connect(self.settings_ready)
+        self.worker.settings_ready.connect(self.settings_ready, Qt.ConnectionType.DirectConnection)
         if old_worker is not None:
             old_worker.deleteLater()
 

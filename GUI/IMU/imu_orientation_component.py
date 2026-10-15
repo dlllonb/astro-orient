@@ -1,7 +1,7 @@
 import math
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from threading import Lock
 
 import numpy as np
@@ -86,6 +86,7 @@ class ThreeSpaceQuaternionReader(QThread):
     """Read the newest ThreeSpace quaternion without queueing every sample."""
 
     status_changed = Signal(str)
+    sample_ready = Signal(object)
 
     def __init__(self, port=None, poll_interval=0.01, parent=None):
         super().__init__(parent)
@@ -129,15 +130,18 @@ class ThreeSpaceQuaternionReader(QThread):
                         accelerometer_enabled=self._read_enabled_state("getAccelerometerEnabledState"),
                         compass_enabled=self._read_enabled_state("getCompassEnabledState"),
                     )
+                    sample = replace(sample, timestamp=time.monotonic())
                     with self._lock:
                         self._latest_sample = sample
                         self._sequence += 1
+                    self.sample_ready.emit(sample)
                 time.sleep(self.poll_interval)
         except (Exception, SystemExit) as exc:
             self.status_changed.emit(f"IMU error: {exc}")
         finally:
             self._cleanup_sensor()
             self._running = False
+            self.status_changed.emit("Disconnected")
 
     def stop(self):
         self._running = False
